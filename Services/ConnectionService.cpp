@@ -1,54 +1,38 @@
 #include "ConnectionService.h"
 
 void cc::ConnectionService::connect() {
-    if (server_socket == -1) {
+    if (client_socket == -1) {
         perror("socket: ");
-        exit(EXIT_FAILURE);
-    }
-
-    struct sockaddr_in server;
-    server.sin_family = AF_INET;
-    server.sin_port = htons(10000);
-    server.sin_addr.s_addr = INADDR_ANY;
-    bzero(&server.sin_zero, 0);
-
-    if ((bind(server_socket, (struct sockaddr *) &server, sizeof(struct sockaddr_in))) == -1) {
-        perror("bind error: ");
         exit(-1);
     }
 
-    if ((listen(server_socket, 8)) == -1) {
-        perror("listen error: ");
+    struct sockaddr_in client;
+    client.sin_family = AF_INET;
+    client.sin_port = htons(PORT); // Port no. of server
+    client.sin_addr.s_addr = INADDR_ANY;
+    //client.sin_addr.s_addr=inet_addr("127.0.0.1"); // Provide IP address of server
+    bzero(&client.sin_zero, 0);
+
+    if ((::connect(client_socket, (struct sockaddr *) &client, sizeof(struct sockaddr_in))) == -1) {
+        perror("connect: ");
         exit(-1);
     }
 
+
 }
 
-template<typename T>
-void cc::ConnectionService::send_message(int client_socket, T value) {
-    send(client_socket, &value, sizeof(value), 0);
-}
-
-template<>
-void cc::ConnectionService::send_message<string>(int client_socket, const string str) {
+void cc::ConnectionService::send_message_string(const string &str) {
     const char *cstr = str.c_str();
     send(client_socket, cstr, sizeof(cstr), 0);
 }
 
-template<typename T>
-T cc::ConnectionService::receive_message(int client_socket) {
-    T value;
-    recv(client_socket, &value, sizeof(value), 0);
-    return value;
-}
-
-template<>
-string cc::ConnectionService::receive_message<string>(int client_socket) {
+string cc::ConnectionService::receive_message_string() {
     char str[MESSAGE_LEN];
     recv(client_socket, str, sizeof(str), 0);
     return string() + str;
 }
 
-void cc::ConnectionService::shutdown() {
-    close(server_socket);
+
+void cc::ConnectionService::disconnect() {
+    close(client_socket);
 }

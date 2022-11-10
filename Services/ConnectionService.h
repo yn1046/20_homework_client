@@ -17,23 +17,32 @@
 using namespace std;
 
 #define MESSAGE_LEN 1024
-#define SERV_ADDR "127.0.0.1"
-#define PORT 10000
+#define PORT 10011
 
 namespace cc {
     class ConnectionService {
-        const int server_socket;
+        const int client_socket;
     public:
-        ConnectionService() : server_socket{socket(AF_INET, SOCK_STREAM, 0)} {}
+        ConnectionService() : client_socket{socket(AF_INET, SOCK_STREAM, 0)} {}
 
         void connect();
 
         template<typename T>
-        void send_message(int client_socket, T value);
+        void send_message(T value) {
+            send(client_socket, &value, sizeof(value), 0);
+        }
+
+        void send_message_string(const string &str);
 
         template<typename T>
-        T receive_message(int client_socket);
+        T receive_message() {
+            T value;
+            recv(client_socket, &value, sizeof(value), 0);
+            return value;
+        }
 
-        void shutdown();
+        string receive_message_string();
+
+        void disconnect();
     };
 }
