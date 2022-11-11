@@ -30,12 +30,10 @@ namespace cc {
         void enter_chat();
         void handle_send();
         void handle_receive();
-        void show_messages();
         string get_input();
         COMMAND_TYPES parse_command(const string &command);
         void do_command(COMMAND_TYPES command);
         static void show_help();
         static ACTION_TYPES get_action();
-        static string gen_password(const string &password);
     };
 } // namespace cc

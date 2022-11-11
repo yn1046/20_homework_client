@@ -19,50 +19,37 @@ Vasiliy Nesterovich
 
 ##### Описание выбранной идеи решения
 
-- Хранить даннные решено в JSON — для простоты и большей переносимости. С этой целью установлена
-  библиотека *<span style="color:#03dbfc">nlohmann/json</span>*.
-- Пароли, разумеется, лучше хешировать. Используется bcrypt из *<span style="color:#03dbfc">crypto++</span>*.
+- Вся логика работы сокетов инкапсулирована в класс `ConnectionService`. Это увеличивает гибкость и переносимость.
+- Клиент разделён на два потока: принимающий и отправляющий, что позволяет независимо слать и получать сообщения.
 
 ##### Описание пользовательских типов и функций в проекте
 
-**Модели:** _Message_, _User_. Описывают сообщения и пользователей соответственно.
+**Enum-ы:** _ActionTypes_, _CommandTypes_. Описывают действия при входе и команды чата соответственно.
 
-**Сервисы:** ChatService, UserService. Отвечают за получение, преобразование, добавление и хранение сообщений и
-пользователей соответственно.
+**Сервисы:** _ConnectionService_. Отвечает за сетевую работу чата.
 
 `Методы ChatService`
 
 ```c++
-// Инициализация при создании класса. Создаёт пустой файл данных, если его ещё нет.
-void initialize();
+// Подключиться к серверу (адрес и порт определены в препроцессоре)
+void connect();
 
-// Считать из файла и получить набор сообщений.
-vector<Message> get_messages();
+// Отправить серверу сообщение любого типа.
+template<typename T>
+void send_message(T value);
 
-// Получить отформатированные сообщения в переписке данного пользователя.
-vector<string> get_formatted_messages(const User *user);
+// Отправить серверу строку.
+void send_message_string(const string &str);
 
-// Отправить сообщение (записать в файл).
-void post_message(Message &message);
-```
+// Получить сообщение от сервера.
+template<typename T>
+T receive_message();
 
-`Методы UserService`
+// Получить строку от сервера.
+string receive_message_string();
 
-```c++
-// Аналогично предыдущему сервису.
-void initialize();
-
-// Создать нового пользователя (записать в файл).
-User add_user(User &user);
-
-// Получить объект пользователя по логину.
-User get_user(string &login);
-
-// Получить набор всех пользователей системы.
-vector<User> get_users();
-
-// Проверить, есть ли в системе пользователь с данным логином.
-bool find_user(string &login);
+// Отключиться от сервера.
+void disconnect();
 ```
 
 **Контроллеры:** весь функционал данного чата управляется _ChatController_.
@@ -79,23 +66,32 @@ void do_signup();
 // Выполнить вход.
 void do_login();
 
+// Отключиться и завершить работу.
+void do_quit();
+
 // Открыть чат (после успешного входа/регистрации).
 void enter_chat(const User &user);
 
-// Отобразить сообщения для данного пользователя.
-void show_messages();
+// Обработчик отправления сообщений.
+void handle_send();
+
+// Обработчик приёма сообщений.
+void handle_receive();
 
 // Считать ввод.
-void do_input();
+string get_input();
+
+// Определить команду чата.
+COMMAND_TYPES parse_command(const string &command);
+
+// Выполнить определённую команду чата.
+void do_command(COMMAND_TYPES command);
 
 // Отобразить подсказки.
 static void show_help();
 
-// Считать начальное действие.
-static int get_action();
-
-// Сгенерировать хеш для пароля.
-static string gen_password(const string &password);
+// Определить начальное действие.
+static ACTION_TYPES get_action();
 ```
 
 Также в коде присутствует хелпер _strutil_ для обработки строк.
