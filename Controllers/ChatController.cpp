@@ -38,6 +38,8 @@ void cc::ChatController::do_signup() {
     cout << "Choose password" << endl;
     cin >> password;
     _connectionService->send_message_string(password);
+    ok = _connectionService->receive_message<bool>();
+    if (!ok) throw;
 
     enter_chat();
 }
